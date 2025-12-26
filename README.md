@@ -89,7 +89,7 @@ A modern, real-time collaborative music streaming platform built with React and 
    ```
 
 5. **Open your browser**
-   Navigate to `http://localhost:5173`
+   Navigate to `http://localhost:3000`
 
 ---
 
