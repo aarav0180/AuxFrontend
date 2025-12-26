@@ -263,7 +263,7 @@ Your backend must implement the following endpoints:
 - `POST /rooms/{room_code}/join` - Join room
 - `POST /rooms/{room_code}/leave` - Leave room
 
-See [`BACKEND_INTEGRATION.md`](BACKEND_INTEGRATION.md) for complete API documentation.
+See [`BACKEND`](https://github.com/aarav0180/AuxBackend) for more information.
 
 ---
 
@@ -290,7 +290,7 @@ npm run lint
 
 ### Development Server
 
-Vite dev server runs on `http://localhost:5173` with:
+Vite dev server runs on `http://localhost:3000` with:
 - ⚡ Hot Module Replacement (HMR)
 - 🔥 Fast refresh for React components
 - 📦 Optimized dependency pre-bundling
@@ -383,18 +383,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: support@AUX.app
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/AUX/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/AUX/discussions)
+- 📧 Email: aarav.18o2005@gmail.com
+- 🐛 Issues: [GitHub Issues](https://github.com/aarav0180/AuxFrontend/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/aarav0180/AuxFrontend/discussions)
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by the AUX Team**
+**Built with ❤️ by the Aarav**
 
 ⭐ Star us on GitHub — it helps!
-
-[Website](https://AUX.app) • [Documentation](https://docs.AUX.app) • [Demo](https://demo.AUX.app)
 
 </div>
