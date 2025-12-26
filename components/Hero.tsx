@@ -44,7 +44,6 @@ export const Hero: React.FC<HeroProps> = ({ onEnter }) => {
       {showUsernamePrompt && (
         <UsernamePrompt
           onSubmit={handleUsernameSubmit}
-          onClose={() => setShowUsernamePrompt(false)}
         />
       )}
       
@@ -68,7 +67,7 @@ export const Hero: React.FC<HeroProps> = ({ onEnter }) => {
         onClick={handleEnter}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        disabled={loading || !username}
+        disabled={loading}
         className={`
           pointer-events-auto
           group relative px-8 py-4 

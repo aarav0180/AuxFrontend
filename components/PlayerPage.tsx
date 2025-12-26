@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { QrCode, Plus } from 'lucide-react';
 import { CurrentSong } from './player/CurrentSong';
 import { PlayerControls } from './player/PlayerControls';
 import { Queue } from './player/Queue';
 import { SearchPage } from './SearchPage';
+import { NetworkScene } from './NetworkScene';
 import { RoomState, Song } from '../types';
 import { useUser } from '../context/UserContext';
 import { useSnackbar } from './ui/SnackbarContainer';
@@ -11,9 +13,10 @@ import { getSyncState, removeFromQueue as apiRemoveFromQueue, skipSong, togglePa
 
 interface PlayerPageProps {
   streamQuality: string;
+  onMemberCountChange?: (count: number) => void;
 }
 
-export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
+export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality, onMemberCountChange }) => {
   const { userId, username, roomCode, isHost, setRoomCode } = useUser();
   const { success, error, info } = useSnackbar();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -29,13 +32,14 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [serverCurrentSong, setServerCurrentSong] = useState<Song | null>(null);
-  const [localQueue, setLocalQueue] = useState<Song[]>([]);
+  const [localQueue, setLocalQueue] = useState<Song[]>([]); // Start empty
   const [showMobileQueue, setShowMobileQueue] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [isPlayingLocally, setIsPlayingLocally] = useState(true);
   const [serverSongId, setServerSongId] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(true);
   const [serverSyncTime, setServerSyncTime] = useState(0);
+  const [memberCount, setMemberCount] = useState(0);
 
   // Join DEFAULT room on mount
   useEffect(() => {
@@ -85,6 +89,11 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
           setServerCurrentSong(song);
           setServerSyncTime(data.seek_position_seconds || 0);
           setServerSongId(song.id);
+          const newMemberCount = data.member_count || 0;
+          setMemberCount(newMemberCount);
+          if (onMemberCountChange) {
+            onMemberCountChange(newMemberCount);
+          }
           
           // Store server queue
           const serverQueue = data.next_songs?.map((s: any) => ({
@@ -105,13 +114,25 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
           if (!hasPerformedInitialSeek.current) {
             setCurrentSong(song);
             setCurrentTime(data.seek_position_seconds || 0);
-            setLocalQueue(serverQueue);
+            setLocalQueue(serverQueue); // Initialize with server queue
             setIsLive(true);
             hasPerformedInitialSeek.current = true;
+          } else {
+            // Always update localQueue
+            if (isLive) {
+              // Live mode - replace entire localQueue with server queue
+              setLocalQueue(serverQueue);
+            } else {
+              // Local mode - append only NEW songs to existing localQueue
+              const existingIds = new Set(localQueue.map(s => s.id));
+              const newSongs = serverQueue.filter(s => !existingIds.has(s.id));
+              if (newSongs.length > 0) {
+                setLocalQueue(prev => [...prev, ...newSongs]);
+              }
+            }
           }
-          // Don't update currentSong or localQueue if user is playing locally
-          // This allows uninterrupted playback
           
+          // Always update server queue fully
           setRoomState({
             currentSongId: song.id,
             startTimestamp: new Date(data.song_start_time).getTime() / 1000,
@@ -143,16 +164,40 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
     };
 
     const handleEnded = () => {
-      // When song ends, advance to next in local queue
-      if (localQueue.length > 0) {
+      // CASE 7: Live mode - continue with server queue
+      if (isLive && roomState.queue.length > 0) {
+        const nextSong = roomState.queue[0];
+        setCurrentSong(nextSong);
+        setCurrentTime(0);
+        // Don't update roomState.queue - let sync API handle it
+        // Keep localQueue = [] (empty)
+        // Stay isLive = true
+        return;
+      }
+      
+      // CASE 8: Local mode with queue - continue with local queue
+      if (!isLive && localQueue.length > 0) {
         const nextSong = localQueue[0];
         setCurrentSong(nextSong);
         setCurrentTime(0);
         setLocalQueue(prev => prev.slice(1));
-        setIsLive(false);
-      } else {
-        // No more songs in local queue, could sync with server or stop
-        handleSkip();
+        // Stay isLive = false
+        return;
+      }
+      
+      // CASE 9: Local mode, empty queue - return to live mode
+      if (!isLive && localQueue.length === 0) {
+        // Return to live by syncing with server state
+        if (serverCurrentSong) {
+          setIsLive(true);
+          setCurrentSong(serverCurrentSong);
+          setCurrentTime(serverSyncTime);
+          setLocalQueue([]); // Clear local queue
+          if (audioRef.current) {
+            audioRef.current.currentTime = serverSyncTime;
+          }
+        }
+        return;
       }
     };
 
@@ -163,7 +208,7 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [currentSong, audioRef.current, localQueue]);
+  }, [currentSong, audioRef.current, localQueue, isLive, roomState.queue, serverCurrentSong, serverSyncTime]);
 
   const handlePlayPause = async () => {
     // Local play/pause control
@@ -183,38 +228,42 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
   const handleSkip = async () => {
     if (!roomCode) return;
     
-    // Check if local song is different from server song
-    const isLocalDifferentFromServer = currentSong?.id !== serverCurrentSong?.id;
-    
-    if (isLocalDifferentFromServer && serverCurrentSong) {
-      // Skip to server's current song and sync queue
-      setCurrentSong(serverCurrentSong);
-      setCurrentTime(serverSyncTime);
-      setLocalQueue(roomState.queue); // Sync local queue with server queue
-      setIsLive(true);
-      setRoomState(prev => ({
-        ...prev,
-        currentSongId: serverCurrentSong.id,
-        startTimestamp: Date.now() / 1000
-      }));
-    } else if (localQueue.length > 0) {
-      // Advance to next song in local queue
+    // CASE 4: Already in local mode with queue
+    if (!isLive && localQueue.length > 0) {
       const nextSong = localQueue[0];
       setCurrentSong(nextSong);
       setCurrentTime(0);
       setLocalQueue(prev => prev.slice(1));
-      setIsLive(false);
-    } else {
-      // Use server voting mechanism when on same song and no local queue
-      try {
-        const response = await skipSong(roomCode, userId);
-        if (response.message) {
-          info(response.message);
-        }
-      } catch (err: any) {
-        console.error('Failed to skip song:', err);
-        error(err.response?.data?.detail || 'Failed to skip song');
+      // Stay isLive = false
+      return;
+    }
+    
+    // CASE 5: In local mode but queue empty
+    if (!isLive && localQueue.length === 0) {
+      info('Song not loaded till now, please wait for everyone to finish listening to previous songs');
+      return;
+    }
+    
+    // CASE 3: In live mode - create local queue from server
+    if (isLive && roomState.queue.length > 0) {
+      const nextSong = roomState.queue[0];
+      const remainingQueue = roomState.queue.slice(1);
+      setCurrentSong(nextSong);
+      setCurrentTime(0);
+      setLocalQueue(remainingQueue); // Take snapshot of server queue
+      setIsLive(false); // Enter local mode
+      return;
+    }
+    
+    // No queue available - use server voting
+    try {
+      const response = await skipSong(roomCode, userId);
+      if (response.message) {
+        info(response.message);
       }
+    } catch (err: any) {
+      console.error('Failed to skip song:', err);
+      error(err.response?.data?.detail || 'Failed to skip song');
     }
   };
 
@@ -303,6 +352,10 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
 
   const handleSeek = (time: number) => {
     setCurrentTime(time);
+    // When seeking, if we were in live mode, take snapshot of server queue
+    if (isLive) {
+      setLocalQueue(roomState.queue);
+    }
     setIsLive(false); // User has seeked away from live
     if (audioRef.current) {
       audioRef.current.currentTime = time;
@@ -315,7 +368,7 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
     setIsLive(true);
     setCurrentSong(serverCurrentSong);
     setCurrentTime(serverSyncTime);
-    setLocalQueue(roomState.queue); // Sync local queue with server queue
+    setLocalQueue([]); // Clear local queue, return to live mode
     
     if (audioRef.current) {
       audioRef.current.currentTime = serverSyncTime;
@@ -339,16 +392,33 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
       {showSearch && <SearchPage onClose={() => setShowSearch(false)} />}
       
       <div className="relative w-full h-full max-h-full flex overflow-hidden">
-        {/* Background - Heavily blurred album art */}
-        <div className="absolute inset-0 z-0">
+        {/* WebGL Network Animation Layer */}
+        <div className="absolute inset-0 z-0 bg-charcoal">
+          <Canvas
+            camera={{ position: [0, 0, 10], fov: 60 }}
+            dpr={[1, 2]}
+            gl={{ antialias: true, alpha: false }}
+          >
+            <color attach="background" args={['#121212']} />
+            <Suspense fallback={null}>
+              <NetworkScene />
+            </Suspense>
+            <fog attach="fog" args={['#121212', 5, 20]} />
+          </Canvas>
+          {/* Lighter vignette to let animation show through */}
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#121212_100%)] opacity-40"></div>
+        </div>
+        
+        {/* Blurred Album Art Overlay - More transparent */}
+        <div className="absolute inset-0 z-[1]">
           {currentSong && (
             <img 
               src={currentSong.artwork} 
               alt="Background" 
-              className="w-full h-full object-cover blur-[80px] brightness-[0.25] scale-110 transition-all duration-1000" 
+              className="w-full h-full object-cover blur-[80px] brightness-[0.15] opacity-60 scale-110 transition-all duration-1000" 
             />
           )}
-          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-black/10" />
         </div>
 
         {/* Main Layout Grid */}
@@ -379,7 +449,7 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
           <div className="hidden lg:flex lg:col-span-4 h-full flex-col overflow-hidden rounded-2xl bg-black/20 backdrop-blur-md border border-white/5">
              <div className="flex-grow overflow-hidden">
                <Queue 
-                 queue={localQueue.length > 0 ? localQueue : roomState.queue}
+                 queue={!isLive ? localQueue : roomState.queue}
                  currentUserId={userId}
                  onRemove={handleRemoveFromQueue}
                  onAddSongs={() => setShowSearch(true)}
@@ -433,7 +503,7 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality }) => {
                 </div>
               <div className="h-full overflow-hidden pb-16">
                 <Queue 
-                  queue={roomState.queue} 
+                  queue={!isLive ? localQueue : roomState.queue}
                   currentUserId={userId}
                   onRemove={handleRemoveFromQueue}
                 />

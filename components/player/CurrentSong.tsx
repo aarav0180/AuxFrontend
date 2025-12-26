@@ -24,8 +24,8 @@ export const CurrentSong: React.FC<CurrentSongProps> = ({ song }) => {
 
       {/* Track Info */}
       <div className="text-center space-y-2 mb-6">
-        <h2 className="font-serif text-3xl md:text-4xl lg:text-4xl text-white tracking-wide animate-fade-in-up">
-          {song.title}
+        <h2 className="font-serif text-3xl md:text-4xl lg:text-4xl text-white tracking-wide animate-fade-in-up line-clamp-2">
+          {song.title.length > 30 ? song.title.substring(0, 30) + '...' : song.title}
         </h2>
         <p className="font-sans text-md text-white/60 tracking-widest uppercase animate-fade-in-up animation-delay-200">
           {song.artist}

@@ -117,7 +117,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
              aria-label="Go to live"
            >
              <Radio size={14} className="text-red-400" />
-             <span className="text-xs text-red-400 font-medium uppercase tracking-wider">Live</span>
+             <span className="text-xs text-red-400 font-medium uppercase tracking-wider">Go Live</span>
            </button>
          )}
 

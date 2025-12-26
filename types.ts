@@ -45,7 +45,9 @@ export interface RoomState {
 export interface HeaderProps {
   view: 'home' | 'player' | 'privacy' | 'terms';
   onGoHome?: () => void;  onOpenSettings?: () => void;
-  onOpenProfile?: () => void;}
+  onOpenProfile?: () => void;
+  memberCount?: number;
+}
 
 export interface CurrentSongProps {
   song: Song | null;

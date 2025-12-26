@@ -25,6 +25,7 @@ const AppContent: React.FC = () => {
   
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const [streamQuality, setStreamQuality] = useState(() => {
     const saved = localStorage.getItem('streamQuality');
     return saved || '320kbps';
@@ -56,6 +57,7 @@ const AppContent: React.FC = () => {
         onGoHome={navigateToHome}
         onOpenSettings={() => setShowSettings(true)}
         onOpenProfile={() => setShowProfile(true)}
+        memberCount={memberCount}
       />
 
       {view === 'home' && (
@@ -103,7 +105,7 @@ const AppContent: React.FC = () => {
 
       {view === 'player' && (
         <div className="relative z-10 w-full h-full animate-fade-in">
-          <PlayerPage streamQuality={streamQuality} />
+          <PlayerPage streamQuality={streamQuality} onMemberCountChange={setMemberCount} />
         </div>
       )}
 

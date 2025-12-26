@@ -32,7 +32,7 @@ export const Queue: React.FC<QueueProps> = ({ queue, currentUserId, onRemove, on
               </div>
             </div>
             <div className="flex-grow min-w-0">
-              <h4 className="font-medium text-white truncate">{song.title}</h4>
+              <h4 className="font-medium text-white truncate">{song.title.length > 30 ? song.title.substring(0, 30) + '...' : song.title}</h4>
               <p className="text-sm text-white/40 truncate">{song.artist}</p>
             </div>
             <div className="flex items-center gap-3">

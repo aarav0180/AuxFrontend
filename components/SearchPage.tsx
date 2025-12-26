@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Search, Plus, Loader2, Music } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Plus, Loader2, Music, X } from 'lucide-react';
 import { searchSongs, addToQueue } from '../utils/api';
 import { useUser } from '../context/UserContext';
 import { useSnackbar } from './ui/SnackbarContainer';
+import { Background } from './Background';
 
 interface SearchResult {
   id: string;
@@ -27,9 +28,38 @@ export const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addingId, setAddingId] = useState<string | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    // Clear previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer for 300ms (0.3 seconds)
+    debounceTimerRef.current = setTimeout(() => {
+      handleSearch();
+    }, 300);
+
+    // Cleanup
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [query]);
 
   const handleSearch = async () => {
-    if (!query.trim()) return;
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -72,18 +102,26 @@ export const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-charcoal overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 overflow-hidden flex flex-col">
+      {/* Background with WebGL Animation */}
+      <Background />
+      
+      {/* Semi-transparent overlay to show background */}
+      <div className="absolute inset-0 bg-charcoal/60" />
+      
+      {/* Content with proper top padding to avoid header collision */}
+      <div className="relative z-10 flex flex-col h-full pt-20">
       {/* Header */}
-      <div className="border-b border-white/10 p-4 lg:p-6">
+      <div className="border-b border-white/10 p-4 lg:p-6 bg-charcoal/50 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-serif text-2xl lg:text-3xl text-white">Search Songs</h2>
           <button
             onClick={onClose}
-            className="text-white/60 hover:text-white transition-colors text-3xl leading-none"
+            className="text-white/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
             type="button"
             aria-label="Close search"
           >
-            ×
+            <X size={24} />
           </button>
         </div>
 
@@ -95,19 +133,16 @@ export const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
               placeholder="Search for songs, artists, or albums..."
               className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-colors"
+              autoFocus
             />
+            {loading && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <Loader2 className="animate-spin text-cyan-400" size={20} />
+              </div>
+            )}
           </div>
-          <button
-            onClick={handleSearch}
-            disabled={loading || !query.trim()}
-            className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-white/10 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
-            type="button"
-          >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : 'Search'}
-          </button>
         </div>
 
         {error && (
@@ -132,51 +167,53 @@ export const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {results.map((song) => (
             <div
               key={song.id}
-              className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all group"
+              className="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 hover:border-cyan-500/30 transition-all group"
             >
-              <div className="flex gap-4">
+              {/* Square Thumbnail */}
+              <div className="relative w-full aspect-square mb-3 rounded-lg overflow-hidden">
                 <img
                   src={song.thumbnails.find(t => t.quality === '150x150')?.url || song.image_url}
                   alt={song.name}
-                  className="w-16 h-16 rounded object-cover flex-shrink-0"
+                  className="w-full h-full object-cover"
                 />
-                <div className="flex-grow min-w-0">
-                  <h3 className="font-medium text-white truncate group-hover:text-cyan-400 transition-colors">
-                    {song.name}
-                  </h3>
-                  <p className="text-sm text-white/60 truncate">{song.artists}</p>
-                  <p className="text-xs text-white/40 truncate">{song.album}</p>
-                  <p className="text-xs text-white/30 mt-1">
-                    {Math.floor(song.duration / 60)}:{String(song.duration % 60).padStart(2, '0')}
-                  </p>
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button
+                    onClick={() => handleAddToQueue(song)}
+                    disabled={addingId === song.id}
+                    className="w-10 h-10 rounded-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-green-500 text-white flex items-center justify-center transition-all transform scale-90 hover:scale-100"
+                    type="button"
+                    aria-label="Add to queue"
+                  >
+                    {addingId === song.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Plus size={18} />
+                    )}
+                  </button>
                 </div>
               </div>
 
-              <button
-                onClick={() => handleAddToQueue(song)}
-                disabled={addingId === song.id}
-                className="mt-3 w-full py-2 bg-cyan-500/20 hover:bg-cyan-500/30 disabled:bg-green-500/20 border border-cyan-500/30 disabled:border-green-500/30 rounded-lg text-cyan-400 disabled:text-green-400 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-                type="button"
-              >
-                {addingId === song.id ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Plus size={16} />
-                    Add to Queue
-                  </>
-                )}
-              </button>
+              {/* Song Details */}
+              <div className="space-y-1">
+                <h3 className="font-medium text-white text-sm truncate group-hover:text-cyan-400 transition-colors">
+                  {song.name}
+                </h3>
+                <p className="text-xs text-white/60 truncate">{song.artists}</p>
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-xs text-white/40 truncate flex-1 mr-2">{song.album}</p>
+                  <span className="text-xs text-white/30 font-mono flex-shrink-0">
+                    {Math.floor(song.duration / 60)}:{String(song.duration % 60).padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );
