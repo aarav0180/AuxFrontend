@@ -1,8 +1,8 @@
-# 🎵 VibeSync
+# 🎵 AUX
 
 A modern, real-time collaborative music streaming platform built with React and TypeScript. Listen to music together with friends in synchronized rooms with beautiful UI and seamless playback control.
 
-![VibeSync](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![AUX](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite)
@@ -57,14 +57,14 @@ A modern, real-time collaborative music streaming platform built with React and 
 
 - **Node.js** 18.x or higher
 - **npm** or **yarn** package manager
-- **Backend API** (VibeSync FastAPI server running on `http://localhost:8000`)
+- **Backend API** (AUX FastAPI server running on `http://localhost:8000`)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/vibesync.git
-   cd vibesync
+   git clone https://github.com/yourusername/AUX.git
+   cd AUX
    ```
 
 2. **Install dependencies**
@@ -80,7 +80,7 @@ A modern, real-time collaborative music streaming platform built with React and 
    Edit `.env` and set your configuration:
    ```env
    VITE_API_BASE_URL=http://localhost:8000
-   VITE_ENCRYPTION_KEY=VibeSync2025SecureKey1234567890X
+   VITE_ENCRYPTION_KEY=AUX2025SecureKey1234567890X
    ```
 
 4. **Start the development server**
@@ -115,7 +115,7 @@ A modern, real-time collaborative music streaming platform built with React and 
 ## 📁 Project Structure
 
 ```
-vibesync/
+AUX/
 ├── src/
 │   ├── components/           # React components
 │   │   ├── Background.tsx    # Animated background
@@ -383,18 +383,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: support@vibesync.app
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/vibesync/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/vibesync/discussions)
+- 📧 Email: support@AUX.app
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/AUX/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/AUX/discussions)
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by the VibeSync Team**
+**Built with ❤️ by the AUX Team**
 
 ⭐ Star us on GitHub — it helps!
 
-[Website](https://vibesync.app) • [Documentation](https://docs.vibesync.app) • [Demo](https://demo.vibesync.app)
+[Website](https://AUX.app) • [Documentation](https://docs.AUX.app) • [Demo](https://demo.AUX.app)
 
 </div>
