@@ -219,7 +219,7 @@ All API responses are encrypted using **AES-256-CBC** encryption:
 - **Padding**: PKCS7
 - **Encoding**: Base64
 
-The frontend automatically decrypts responses using the Web Crypto API. See [`https://github.com/aarav0180/AuxBackend/blob/main/decryption.md`](decryption.md) for detailed implementation guide.
+The frontend automatically decrypts responses using the Web Crypto API. See [`decryption.md`](https://github.com/aarav0180/AuxBackend/blob/main/decryption.md) for detailed implementation guide.
 
 ### Best Practices
 
