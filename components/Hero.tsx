@@ -59,7 +59,7 @@ export const Hero: React.FC<HeroProps> = ({ onEnter }) => {
 
       {/* Subtitle */}
       <p className="font-sans text-gray-400 text-sm md:text-base tracking-[0.2em] uppercase mb-12 max-w-md animate-fade-in-up animation-delay-200">
-        Decentralized music, curated by everyone. <br/> Scan to join the queue.
+        Music without boundaries. Collective listening.
       </p>
 
       {/* Glass Button CTA */}
@@ -102,7 +102,7 @@ export const Hero: React.FC<HeroProps> = ({ onEnter }) => {
 
       {/* Decorative Line */}
       <div className="absolute bottom-32 w-px h-16 bg-gradient-to-b from-transparent via-white/20 to-transparent animate-pulse-slow"></div>
-    </div>
+      </div>
     </>
   );
 };

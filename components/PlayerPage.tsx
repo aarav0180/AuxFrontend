@@ -114,23 +114,13 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality, onMemberC
           if (!hasPerformedInitialSeek.current) {
             setCurrentSong(song);
             setCurrentTime(data.seek_position_seconds || 0);
-            setLocalQueue(serverQueue); // Initialize with server queue
+            setLocalQueue([]); // Start with empty - we display roomState.queue when live
             setIsLive(true);
             hasPerformedInitialSeek.current = true;
-          } else {
-            // Always update localQueue
-            if (isLive) {
-              // Live mode - replace entire localQueue with server queue
-              setLocalQueue(serverQueue);
-            } else {
-              // Local mode - append only NEW songs to existing localQueue
-              const existingIds = new Set(localQueue.map(s => s.id));
-              const newSongs = serverQueue.filter(s => !existingIds.has(s.id));
-              if (newSongs.length > 0) {
-                setLocalQueue(prev => [...prev, ...newSongs]);
-              }
-            }
           }
+          // Don't update localQueue during sync
+          // When isLive=true: display roomState.queue (always fresh from server)
+          // When isLive=false: display localQueue (user's frozen snapshot)
           
           // Always update server queue fully
           setRoomState({
@@ -178,9 +168,10 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality, onMemberC
       // CASE 8: Local mode with queue - continue with local queue
       if (!isLive && localQueue.length > 0) {
         const nextSong = localQueue[0];
-        setCurrentSong(nextSong);
+        const updatedQueue = localQueue.slice(1);
+        setLocalQueue(updatedQueue); // Remove first song from queue
+        setCurrentSong(nextSong); // Play the next song
         setCurrentTime(0);
-        setLocalQueue(prev => prev.slice(1));
         // Stay isLive = false
         return;
       }

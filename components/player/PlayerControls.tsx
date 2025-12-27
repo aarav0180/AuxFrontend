@@ -97,9 +97,9 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
               <button onClick={onSkip} className="text-white/40 hover:text-white transition-colors">
                   <SkipForward size={28} />
               </button>
-              <span className="font-sans text-[10px] text-white/30 uppercase tracking-widest border border-white/10 px-2 py-1 rounded">
+              {/* <span className="font-sans text-[10px] text-white/30 uppercase tracking-widest border border-white/10 px-2 py-1 rounded">
                 1/3 Votes
-              </span>
+              </span> */}
            </div>
            {showQueueButton && (
              <button onClick={onToggleQueue} className="lg:hidden text-white/40 hover:text-white transition-colors">

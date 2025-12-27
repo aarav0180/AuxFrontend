@@ -2,7 +2,7 @@ import React from 'react';
 import { Disc, PictureInPicture2, Settings as SettingsIcon, User } from 'lucide-react';
 import { HeaderProps } from '../types';
 
-export const Header: React.FC<HeaderProps> = ({ view, onGoHome, onOpenSettings, onOpenProfile, memberCount = 0 }) => {
+export const Header: React.FC<HeaderProps> = ({ view, onGoHome, onOpenSettings, onOpenProfile, memberCount = 0, onOpenManifesto, onOpenExplore, onOpenInvite }) => {
   return (
     <div className="absolute top-0 left-0 w-full z-20 px-8 py-6 flex justify-between items-center">
       <div 
@@ -24,15 +24,27 @@ export const Header: React.FC<HeaderProps> = ({ view, onGoHome, onOpenSettings, 
 
         {view === 'home' && (
           <nav className="hidden md:flex gap-8">
-            {['Manifesto', 'Queue', 'Connect'].map((item) => (
-              <a 
-                key={item} 
-                href="#" 
-                className="font-sans text-xs uppercase tracking-[0.15em] text-white/60 hover:text-cyan-400 transition-colors duration-300"
-              >
-                {item}
-              </a>
-            ))}
+            <button
+              onClick={onOpenManifesto}
+              className="font-sans text-xs uppercase tracking-[0.15em] text-white/60 hover:text-cyan-400 transition-colors duration-300"
+              type="button"
+            >
+              Manifesto
+            </button>
+            <button
+              onClick={onOpenExplore}
+              className="font-sans text-xs uppercase tracking-[0.15em] text-white/60 hover:text-cyan-400 transition-colors duration-300"
+              type="button"
+            >
+              Explore
+            </button>
+            <button
+              onClick={onOpenInvite}
+              className="font-sans text-xs uppercase tracking-[0.15em] text-white/60 hover:text-cyan-400 transition-colors duration-300"
+              type="button"
+            >
+              Invite
+            </button>
           </nav>
         )}
 

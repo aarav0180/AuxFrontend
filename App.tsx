@@ -4,6 +4,9 @@ import { Hero } from './components/Hero';
 import { PeerIndicator } from './components/PeerIndicator';
 import { Header } from './components/Header';
 import { PlayerPage } from './components/PlayerPage';
+import { ManifestoPage } from './components/ManifestoPage';
+import { ExplorePage } from './components/ExplorePage';
+import { InvitePage } from './components/InvitePage';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfService } from './components/TermsOfService';
 import { Settings } from './components/Settings';
@@ -25,6 +28,9 @@ const AppContent: React.FC = () => {
   
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showManifesto, setShowManifesto] = useState(false);
+  const [showExplore, setShowExplore] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
   const [streamQuality, setStreamQuality] = useState(() => {
     const saved = localStorage.getItem('streamQuality');
@@ -52,11 +58,26 @@ const AppContent: React.FC = () => {
         <Profile onClose={() => setShowProfile(false)} />
       )}
       
+      {showManifesto && (
+        <ManifestoPage onClose={() => setShowManifesto(false)} />
+      )}
+      
+      {showExplore && (
+        <ExplorePage onClose={() => setShowExplore(false)} />
+      )}
+      
+      {showInvite && (
+        <InvitePage onClose={() => setShowInvite(false)} />
+      )}
+      
       <Header 
         view={view} 
         onGoHome={navigateToHome}
         onOpenSettings={() => setShowSettings(true)}
         onOpenProfile={() => setShowProfile(true)}
+        onOpenManifesto={() => setShowManifesto(true)}
+        onOpenExplore={() => setShowExplore(true)}
+        onOpenInvite={() => setShowInvite(true)}
         memberCount={memberCount}
       />
 

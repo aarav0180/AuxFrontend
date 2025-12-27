@@ -44,8 +44,12 @@ export interface RoomState {
 // Component prop interfaces
 export interface HeaderProps {
   view: 'home' | 'player' | 'privacy' | 'terms';
-  onGoHome?: () => void;  onOpenSettings?: () => void;
+  onGoHome?: () => void;
+  onOpenSettings?: () => void;
   onOpenProfile?: () => void;
+  onOpenManifesto?: () => void;
+  onOpenExplore?: () => void;
+  onOpenInvite?: () => void;
   memberCount?: number;
 }
 
