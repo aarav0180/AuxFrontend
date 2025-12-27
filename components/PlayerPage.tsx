@@ -497,6 +497,7 @@ export const PlayerPage: React.FC<PlayerPageProps> = ({ streamQuality, onMemberC
                   queue={!isLive ? localQueue : roomState.queue}
                   currentUserId={userId}
                   onRemove={handleRemoveFromQueue}
+                  onAddSongs={() => setShowSearch(true)}
                 />
               </div>
             </div>
